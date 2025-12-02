@@ -1,0 +1,88 @@
+name: CI Pipeline
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  # ===============================================================
+  # 1. Lint, Type-Check, Test, Coverage
+  # ===============================================================
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ruff
+        run: |
+          ruff check .
+
+      - name: Mypy
+        run: |
+          mypy .
+
+      - name: Test with coverage
+        run: |
+          coverage run -m pytest -q
+          coverage xml
+          coverage html
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage.xml
+            htmlcov/
+
+  # ===============================================================
+  # 2. Deploy coverage to gh-pages branch
+  # ===============================================================
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # NEW: Download the htmlcov artifact created in test job
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: out
+
+      # htmlcov is now located under ./out/htmlcov
+      # not at project root
+      - name: Prepare gh-pages content
+        run: |
+          rm -rf final
+          mkdir final
+          cp -r out/htmlcov/* final/
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: final
+          force_orphan: true

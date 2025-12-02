@@ -11,6 +11,7 @@ day-%:
 	@mkdir -p day$* tests/day$*
 
 	@sed "s/{{day}}/$*/g" templates/day.py.tpl > day$*/day$*.py
+	@sed "s/{{day}}/$*/g" templates/__init__.py.tpl > day$*/__init__$*.py
 	@sed "s/{{day}}/$*/g" templates/test.py.tpl > tests/day$*/test_day$*.py
 
 	@echo "Done."
