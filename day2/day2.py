@@ -1,6 +1,11 @@
 """Day 2 https://adventofcode.com/2025/day/2"""
 
 from pathlib import Path
+from enum import IntEnum
+
+class CheckResult(IntEnum):
+    INVALID = 0
+    VALID = 1
 
 class Day2:
     """Day2 class."""
@@ -44,7 +49,8 @@ class Day2:
         for i in range(int(ranges[0]), int(ranges[1]) + 1):
             self.check_value(str(i))
 
-    def check_value(self, string: str) -> None:
+
+    def check_value(self, string: str) -> CheckResult:
         """Check if the given string is one twice repeated sequence.
 
         Args:
@@ -53,8 +59,46 @@ class Day2:
         length: int = len(string)
         if string[(int(length/2)):] == string[:(int(length/2))]:
             self.add(int(string))
+            return CheckResult.INVALID
+        return CheckResult.VALID
+
+class Day2_2(Day2):
+    """Day2.2 class"""
+    def __init__(self):
+        """Day2.2 class"""
+        super().__init__()
+    
+    def check_value(self, string: str) -> CheckResult:
+        """Check if the given string has repeated parts. (uses Knuth-Morris-Pratt algorithm)
+
+        Args:
+            string (str): string to check 
+        """
+
+        length: int                 = len(string)
+        prefix: list[int]           = [0] * length
+        longest_prefix_length: int  = 0
+
+        for i in range(1, length):
+            while longest_prefix_length > 0 and string[i] != string[longest_prefix_length]:
+                longest_prefix_length = prefix[longest_prefix_length - 1]
+            
+            if string[i] == string[longest_prefix_length]:
+                longest_prefix_length += 1
+                prefix[i] = longest_prefix_length
+
+        block_length: int = length - prefix[-1]
+
+        if block_length < length and length % block_length == 0:
+            self.add(int(string))
+            return CheckResult.INVALID
+        return CheckResult.VALID
 
 if __name__ == "__main__":
     day2 = Day2()
+    day2_2 = Day2_2()
+
     day2.parse(Path("./day2/input.txt"))
     print(day2.result)
+    day2_2.parse(Path("./day2/input.txt"))
+    print(day2_2.result)
