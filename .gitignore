@@ -1,7 +1,15 @@
+# Python
 .venv
-.vscode
 .mypy_cache
 .pytest_cache
 __pycache__
 
+# IDE
+.vscode
+.idea
+
+# Env secrets
+.env
+
+# AOC inputs
 input*.txt
